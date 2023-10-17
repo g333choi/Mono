@@ -94,12 +94,13 @@ def parse(file):
         line = lines[i]
         inst_line = ''
         InCondition = False
+        InRepeat = False
 
         if line[-1][0] == 'LINEEND':
             for j in range(len(line)):
                 token = line[j]
                 
-                if token[0] == 'MAKEVAR' and line[j+1][0] != 'LINEEND' and InCondition == False:
+                if token[0] == 'MAKEVAR' and line[j+1][0] != 'LINEEND' and InCondition == False and InRepeat == False:
                     if line[j+1][0] == 'COLON':
                         if line[j+2][0] == 'INT':
                             if line[j+3][0] == 'LINEEND':
@@ -111,7 +112,7 @@ def parse(file):
                                     exec(inst_line)
 
                                 else:
-                                    print("ERROR: Wrong type. 'INT' type expected")
+                                    print("ERROR at line[{}]: Wrong type. 'INT' type expected".format(i+1))
                                     sys.exit()
 
                             elif line[j+3][0] == 'MULTI':
@@ -123,11 +124,11 @@ def parse(file):
                                     exec(inst_line)
 
                                 else:
-                                    print("ERROR: Wrong type. 'INT' type expected")
+                                    print("ERROR at line[{}]: Wrong type. 'INT' type expected".format(i+1))
                                     sys.exit()
 
                             else:
-                                print("ERROR: Wrong type. 'MULTI' or 'LINEEND' type expected")
+                                print("ERROR at line[{}]: Wrong type. 'MULTI' or 'LINEEND' type expected", format(i+1))
                                 sys.exit()
 
                         elif line[j+2][0] == 'LINEEND':
@@ -137,14 +138,14 @@ def parse(file):
                             exec(inst_line)
 
                         else:
-                            print("ERROR: Wrong type. 'INT' or 'LINEEND' type expected")
+                            print("ERROR at line[{}]: Wrong type. 'INT' or 'LINEEND' type expected", format(i+1))
                             sys.exit()
 
                     else:
-                        print("ERROR: Wrong syntax. ':' expected")
+                        print("ERROR at line[{}]: Wrong syntax. ':' expected".format(i+1))
                         sys.exit()
 
-                elif token[0] == 'INPUT' and InCondition == False:
+                elif token[0] == 'INPUT' and InCondition == False and InRepeat == False:
                     if line[j+1][0] == 'SEMICOLON':
                         if line[j+2][0] == 'MAKEVAR':
                             inst_line += 'Vars['
@@ -154,18 +155,18 @@ def parse(file):
                             if a.isdigit():
                                 inst_line += a
                             else:
-                                print("ERROR: Wrong type. 'INT' type needs to be entered")
+                                print("ERROR at line[{}]: Wrong type. 'INT' type needs to be entered".format(i+1))
                                 sys.exit()
                             exec(inst_line)
                         
                         else:
-                            print("ERROR: Wrong type. 'USEVAR type expected")
+                            print("ERROR at line[{}]: Wrong type. 'USEVAR type expected".format(i+1))
                             sys.exit()   
                     else:
-                        print("ERROR: Wrong syntax. ';' expected")
+                        print("ERROR at line[{}]: Wrong syntax. ';' expected".format(i+1))
                         sys.exit()
                 
-                elif token[0] == 'INTPRINT' and InCondition == False:
+                elif token[0] == 'INTPRINT' and InCondition == False and InRepeat == False:
                     if line[j+1][0] == 'SEMICOLON':
                         if line[j+2][0] == 'INT':
                             print(line[j+2][1].count('.') - line[j+2][1].count(','))
@@ -174,14 +175,14 @@ def parse(file):
                             print(Vars[line[j+2][1].count("'")])
 
                         else:
-                            print("ERROR: Wrong type. 'INT' or 'USEVAR' type expected")
+                            print("ERROR at line[{}]: Wrong type. 'INT' or 'USEVAR' type expected".format(i+1))
                             sys.exit()
                     
                     else:
-                        print("ERROR: Wrong syntax. ';' expected")
+                        print("ERROR at line[{}]: Wrong syntax. ';' expected".format(i+1))
                         sys.exit()
 
-                elif token[0] == 'STRPRINT' and InCondition == False:
+                elif token[0] == 'STRPRINT' and InCondition == False and InRepeat == False:
                     if line[j+1][0] == 'SEMICOLON':
                         if line[j+2][0] == 'INT':
                             if line[j+3][0] == 'MULTI':
@@ -189,50 +190,61 @@ def parse(file):
                                     if (line[j+2][1].count('.') - line[j+2][1].count(',')) * (line[j+4][1].count('.') - line[j+4][1].count(',')) > 31:
                                         print(chr((line[j+2][1].count('.') - line[j+2][1].count(',')) * (line[j+4][1].count('.') - line[j+4][1].count(','))))
                                     else:
-                                        print("ERROR: Wrong number. Number must be over 31")
+                                        print("ERROR at line[{}]: Wrong number. Number must be over 31".format(i+1))
                                         sys.exit()
                                 else:
-                                    print("ERROR: Wrong type. 'INT' type expected")
+                                    print("ERROR at line[{}]: Wrong type. 'INT' type expected".format(i+1))
                                     sys.exit()
                             
                             elif line[j+3][0] == 'LINEEND':
                                 if (line[j+2][1].count('.') - line[j+2][1].count(',')) * (line[j+4][1].count('.') - line[j+4][1].count(',')) > 31:
                                     print(chr(line[j+2][1].count('.') - line[j+2][1].count(',')))
                                 else:
-                                    print("ERROR: Wrong number. Number must be over 31")
+                                    print("ERROR at line[{}]: Wrong number. Number must be over 31".format(i+1))
                                     sys.exit()
                             
                             else:
-                                print("ERROR: Wrong type. 'INT' or 'LINEEND' type expected")
+                                print("ERROR at line[{}]: Wrong type. 'INT' or 'LINEEND' type expected".format(i+1))
                                 sys.exit()
                         
                         elif line[j+2][0] == 'USEVAR':
                             if int(Vars[line[j+2][1].count("'")]) > 31:
                                 print(chr(int(Vars[line[j+2][1].count("'")])))
                             else:
-                                print("ERROR: Wrong number. Number must be over 31")
+                                print("ERROR at line[{}]: Wrong number. Number must be over 31".format(i+1))
                                 sys.exit()
                         
                         elif line[j+2][0] == 'LINEEND':
                             print("\n", end = '')
 
                     else:
-                        print("ERROR: Wrong syntax. ';' expected")
+                        print("ERROR at line[{}]: Wrong syntax. ';' expected".format(i+1))
                         sys.exit()
                 
-                elif token[0] == 'CONDITION' and InCondition == False:
+                elif token[0] == 'CONDITION' and InCondition == False and InRepeat == False:
                     InCondition = True
-                    condition(line, j, token, inst_line)
+                    condition(line, j, token, inst_line, i)
+
+                elif token[0] == 'REPEAT' and InCondition == False and InRepeat == False:
+                    InRepeat = True
+                    repeat(line, j, token, inst_line, i)
 
 
         else:
-            print("ERROR: '\"' expected at the end")
+            print("ERROR at line[{}]: '\"' expected at the end".format(i+1))
             sys.exit()
 
     print(Vars)
     return lines
 
-def condition(line, j, token, inst_line):
+
+def repeat(line, j, token, inst_line, i):
+    if line [j+1][0] == 'SEMICOLON':
+        print(1)
+    else:
+        print("ERROR at line[{}]: Wrong syntax. ';' expected".format(i+1))
+
+def condition(line, j, token, inst_line, i):
     if line[j+1][0] == 'SEMICOLON':
         if line[j+3][0] == 'COLON':
             if line[j+2][0] == 'INT':
@@ -250,7 +262,7 @@ def condition(line, j, token, inst_line):
                                         exec(inst_line)
 
                                     else:
-                                        print("ERROR: Wrong type. 'INT' type expected")
+                                        print("ERROR at line[{}]: Wrong type. 'INT' type expected".format(i+1))
                                         sys.exit()
 
                                 elif line[j+7][0] == 'MULTI':
@@ -262,11 +274,11 @@ def condition(line, j, token, inst_line):
                                         exec(inst_line)
 
                                     else:
-                                        print("ERROR: Wrong type. 'INT' type expected")
+                                        print("ERROR at line[{}]: Wrong type. 'INT' type expected".format(i+1))
                                         sys.exit()
 
                                 else:
-                                    print("ERROR: Wrong type. 'MULTI' or 'LINEEND' type expected")
+                                    print("ERROR at line[{}]: Wrong type. 'MULTI' or 'LINEEND' type expected".format(i+1))
                                     sys.exit()
 
                             elif line[j+6][0] == 'LINEEND':
@@ -276,11 +288,11 @@ def condition(line, j, token, inst_line):
                                 exec(inst_line)
 
                             else:
-                                print("ERROR: Wrong type. 'INT' or 'LINEEND' type expected")
+                                print("ERROR at line[{}]: Wrong type. 'INT' or 'LINEEND' type expected".format(i+1))
                                 sys.exit()
 
                         else:
-                            print("ERROR: Wrong syntax. ':' expected")
+                            print("ERROR at line[{}]: Wrong syntax. ':' expected".format(i+1))
                             sys.exit()
 
                     elif line[j+4][0] == 'INPUT':
@@ -293,15 +305,15 @@ def condition(line, j, token, inst_line):
                                 if a.isdigit():
                                     inst_line += a
                                 else:
-                                    print("ERROR: Wrong type. 'INT' type needs to be entered")
+                                    print("ERROR at line[{}]: Wrong type. 'INT' type needs to be entered".format(i+1))
                                     sys.exit()
                                 exec(inst_line)
                             
                             else:
-                                print("ERROR: Wrong type. 'USEVAR type expected")
+                                print("ERROR at line[{}]: Wrong type. 'USEVAR type expected".format(i+1))
                                 sys.exit()   
                         else:
-                            print("ERROR: Wrong syntax. ';' expected")
+                            print("ERROR at line[{}]: Wrong syntax. ';' expected".format(i+1))
                             sys.exit()
 
                     elif line[j+4][0] == 'INTPRINT':
@@ -313,11 +325,11 @@ def condition(line, j, token, inst_line):
                                 print(Vars[line[j+6][1].count("'")])
 
                             else:
-                                print("ERROR: Wrong type. 'INT' or 'USEVAR' type expected")
+                                print("ERROR at line[{}]: Wrong type. 'INT' or 'USEVAR' type expected".format(i+1))
                                 sys.exit()
                         
                         else:
-                            print("ERROR: Wrong syntax. ';' expected")
+                            print("ERROR at line[{}]: Wrong syntax. ';' expected".format(i+1))
                             sys.exit()
 
                     elif line[j+4][0] == 'STRPRINT':
@@ -328,35 +340,35 @@ def condition(line, j, token, inst_line):
                                         if (line[j+6][1].count('.') - line[j+6][1].count(',')) * (line[j+8][1].count('.') - line[j+8][1].count(',')) > 31:
                                             print(chr((line[j+6][1].count('.') - line[j+6][1].count(',')) * (line[j+8][1].count('.') - line[j+8][1].count(','))))
                                         else:
-                                            print("ERROR: Wrong number. Number must be over 31")
+                                            print("ERROR at line[{}]: Wrong number. Number must be over 31".format(i+1))
                                             sys.exit()
                                     else:
-                                        print("ERROR: Wrong type. 'INT' type expected")
+                                        print("ERROR at line[{}]: Wrong type. 'INT' type expected".format(i+1))
                                         sys.exit()
                                 
                                 elif line[j+7][0] == 'LINEEND':
                                     if (line[j+6][1].count('.') - line[j+6][1].count(',')) * (line[j+8][1].count('.') - line[j+8][1].count(',')) > 31:
                                         print(chr(line[j+6][1].count('.') - line[j+6][1].count(',')))
                                     else:
-                                        print("ERROR: Wrong number. Number must be over 31")
+                                        print("ERROR at line[{}]: Wrong number. Number must be over 31".format(i+1))
                                         sys.exit()
                                 
                                 else:
-                                    print("ERROR: Wrong type. 'INT' or 'LINEEND' type expected")
+                                    print("ERROR at line[{}]: Wrong type. 'INT' or 'LINEEND' type expected".format(i+1))
                                     sys.exit()
                             
                             elif line[j+6][0] == 'USEVAR':
                                 if int(Vars[line[j+6][1].count("'")]) > 31:
                                     print(chr(int(Vars[line[j+6][1].count("'")])))
                                 else:
-                                    print("ERROR: Wrong number. Number must be over 31")
+                                    print("ERROR at line[{}]: Wrong number. Number must be over 31".format(i+1))
                                     sys.exit()
                             
                             elif line[j+6][0] == 'LINEEND':
                                 print("\n", end = '')
 
                         else:
-                            print("ERROR: Wrong syntax. ';' expected")
+                            print("ERROR at line[{}]: Wrong syntax. ';' expected".format(i+1))
                             sys.exit()
 
                     elif line[j+4][0] == 'REPEAT':
@@ -365,19 +377,145 @@ def condition(line, j, token, inst_line):
                         condition(line, j+4, token, inst_line)
                 else:
                     pass
+
             elif line[j+2][0] == 'USEVAR':
                 if int(Vars[line[j+2][1].count("'")]) == 0:
-                    print(1)
+                    if line[j+4][0] == 'MAKEVAR':
+                        if line[j+5][0] == 'COLON':
+                            if line[j+6][0] == 'INT':
+                                if line[j+7][0] == 'LINEEND':
+                                    if line[j+6][0] == 'INT':
+                                        inst_line += 'Vars['
+                                        inst_line += str(token[1].count("`"))
+                                        inst_line += '] = '
+                                        inst_line += str(line[j+2][1].count('.') - line[j+2][1].count(','))
+                                        exec(inst_line)
+
+                                    else:
+                                        print("ERROR at line[{}]: Wrong type. 'INT' type expected".format(i+1))
+                                        sys.exit()
+
+                                elif line[j+7][0] == 'MULTI':
+                                    if line[j+6][0] == 'INT' and line[j+8][0] == 'INT':
+                                        inst_line += 'Vars['
+                                        inst_line += str(token[1].count("`"))
+                                        inst_line += '] = '
+                                        inst_line += str((line[j+2][1].count('.') - line[j+2][1].count(',')) * (line[j+4][1].count('.') - line[j+4][1].count(',')))
+                                        exec(inst_line)
+
+                                    else:
+                                        print("ERROR at line[{}]: Wrong type. 'INT' type expected".format(i+1))
+                                        sys.exit()
+
+                                else:
+                                    print("ERROR at line[{}]: Wrong type. 'MULTI' or 'LINEEND' type expected".format(i+1))
+                                    sys.exit()
+
+                            elif line[j+6][0] == 'LINEEND':
+                                inst_line += 'Vars['
+                                inst_line += str(token[1].count("`"))
+                                inst_line += '] = 0'
+                                exec(inst_line)
+
+                            else:
+                                print("ERROR at line[{}]: Wrong type. 'INT' or 'LINEEND' type expected".format(i+1))
+                                sys.exit()
+
+                        else:
+                            print("ERROR at line[{}]: Wrong syntax. ':' expected".format(i+1))
+                            sys.exit()
+
+                    elif line[j+4][0] == 'INPUT':
+                        if line[j+5][0] == 'SEMICOLON':
+                            if line[j+6][0] == 'MAKEVAR':
+                                inst_line += 'Vars['
+                                inst_line += str(line[j+6][1].count("`"))
+                                inst_line += '] = '
+                                a = input()
+                                if a.isdigit():
+                                    inst_line += a
+                                else:
+                                    print("ERROR at line[{}]: Wrong type. 'INT' type needs to be entered".format(i+1))
+                                    sys.exit()
+                                exec(inst_line)
+                            
+                            else:
+                                print("ERROR at line[{}]: Wrong type. 'USEVAR type expected".format(i+1))
+                                sys.exit()   
+                        else:
+                            print("ERROR at line[{}]: Wrong syntax. ';' expected".format(i+1))
+                            sys.exit()
+
+                    elif line[j+4][0] == 'INTPRINT':
+                        if line[j+5][0] == 'SEMICOLON':
+                            if line[j+6][0] == 'INT':
+                                print(line[j+6][1].count('.') - line[j+6][1].count(','))
+
+                            elif line[j+6][0] == 'USEVAR':
+                                print(Vars[line[j+6][1].count("'")])
+
+                            else:
+                                print("ERROR at line[{}]: Wrong type. 'INT' or 'USEVAR' type expected".format(i+1))
+                                sys.exit()
+                        
+                        else:
+                            print("ERROR at line[{}]: Wrong syntax. ';' expected".format(i+1))
+                            sys.exit()
+
+                    elif line[j+4][0] == 'STRPRINT':
+                        if line[j+5][0] == 'SEMICOLON':
+                            if line[j+6][0] == 'INT':
+                                if line[j+7][0] == 'MULTI':
+                                    if line[j+8][0] == 'INT':
+                                        if (line[j+6][1].count('.') - line[j+6][1].count(',')) * (line[j+8][1].count('.') - line[j+8][1].count(',')) > 31:
+                                            print(chr((line[j+6][1].count('.') - line[j+6][1].count(',')) * (line[j+8][1].count('.') - line[j+8][1].count(','))))
+                                        else:
+                                            print("ERROR at line[{}]: Wrong number. Number must be over 31".format(i+1))
+                                            sys.exit()
+                                    else:
+                                        print("ERROR at line[{}]: Wrong type. 'INT' type expected".format(i+1))
+                                        sys.exit()
+                                
+                                elif line[j+7][0] == 'LINEEND':
+                                    if (line[j+6][1].count('.') - line[j+6][1].count(',')) * (line[j+8][1].count('.') - line[j+8][1].count(',')) > 31:
+                                        print(chr(line[j+6][1].count('.') - line[j+6][1].count(',')))
+                                    else:
+                                        print("ERROR at line[{}]: Wrong number. Number must be over 31".format(i+1))
+                                        sys.exit()
+                                
+                                else:
+                                    print("ERROR at line[{}]: Wrong type. 'INT' or 'LINEEND' type expected".format(i+1))
+                                    sys.exit()
+                            
+                            elif line[j+6][0] == 'USEVAR':
+                                if int(Vars[line[j+6][1].count("'")]) > 31:
+                                    print(chr(int(Vars[line[j+6][1].count("'")])))
+                                else:
+                                    print("ERROR at line[{}]: Wrong number. Number must be over 31".format(i+1))
+                                    sys.exit()
+                            
+                            elif line[j+6][0] == 'LINEEND':
+                                print("\n", end = '')
+
+                        else:
+                            print("ERROR at line[{}]: Wrong syntax. ';' expected".format(i+1))
+                            sys.exit()
+
+                    elif line[j+4][0] == 'REPEAT':
+                        print(1)
+                    elif line[j+4][0] == 'CONDITION':
+                        condition(line, j+4, token, inst_line)
                 else:
                     pass
+
             else:
-                print("ERROR: Wrong type. 'INT' or 'USEVAR' type expected")
+                print("ERROR at line[{}]: Wrong type. 'INT' or 'USEVAR' type expected".format(i+1))
                 sys.exit()
                 
         else:
-            print("ERROR: Wrong syntax. ':' expected")
+            print("ERROR at line[{}]: Wrong syntax. ':' expected".format(i+1))
             sys.exit()
 
     else:
-        print("ERROR: Wrong syntax. ';' expected")
+        print("ERROR at line[{}]: Wrong syntax. ';' expected".format(i+1))
         sys.exit()
