@@ -2,4 +2,4 @@ from sys import *
 from Interpreter import *
 
 if __name__ == '__main__':
-    print(parse(argv[1]))
+    parse(argv[1])
