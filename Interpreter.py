@@ -51,7 +51,7 @@ def lexer(contents):
 
             elif "'" in token:
                 for o in token:
-                    if o != "'":
+                    if o != "'" and o != '.' and o != ',':
                         IsUsevar = False
                 if IsUsevar:
                     items.append(("USEVAR", token))                 #변수 생성
@@ -103,7 +103,6 @@ Vars = {                                                        #변수 저장 �
 
 }
 
-
 def parse(file):
     contents = open(file, 'r', encoding='UTF-8').read()
     lines = lexer(contents)
@@ -147,8 +146,7 @@ def parse(file):
             print("ERROR at line[{}]: '\"' expected at the end".format(i+1))
             sys.exit()
 
-
-def repeat(line, j, inst_line, i, token):
+def repeat(line, j, inst_line, i, token):               #반복문
     if line [j+1][0] == 'SEMICOLON':
         if line[j+3][0] == 'COLON':
             if line[j+2][0] == 'INT':
@@ -206,14 +204,14 @@ def repeat(line, j, inst_line, i, token):
 
                 else:
                     print("ERROR at line[{}]: Wrong type. 'MULTI' or 'COLON' type expected".format(i+1))
+                    sys.exit()
 
             
 
             elif line[j+2][0] == 'USEVAR':
-                if line[j+3][0] == 'INT':
                     if (line[j+2][1].count("'")) in Vars.keys():
                         if Vars[line[j+2][1].count("'")] > 0:
-                            for p in range(Vars[line[j+2][1].count("'")] + (line[j+3][1].count('.') , line[j+3][1].count(','))):
+                            for p in range(Vars[line[j+2][1].count("'")] + (line[j+2][1].count('.') - line[j+2][1].count(','))):
 
                                 if line[j+4][0] == 'MAKEVAR':
                                     makevar(line, j+4, token, i,inst_line)
@@ -240,42 +238,6 @@ def repeat(line, j, inst_line, i, token):
                     else:
                         print("ERROR at line[{}]: Wrong name. Variable has to be made first".format(i+1))
                         sys.exit()
-
-                elif line[j+3][0] == 'COLON':
-                    if (line[j+2][1].count("'")) in Vars.keys():
-                        if Vars[line[j+2][1].count("'")] > 0:
-                            for p in range(Vars[line[j+2][1].count("'")]):
-
-                                if line[j+4][0] == 'MAKEVAR':
-                                    makevar(line, j+4, token, i,inst_line)
-
-                                elif line[j+4][0] == 'INPUT':
-                                    monoinput(line, j+4, i, inst_line)
-                                
-                                elif line[j+4][0] == 'INTPRINT':
-                                    intprint(line, j+4, i)
-
-                                elif line[j+4][0] == 'STRPRINT':
-                                    strprint(line, j+4, i)
-                                
-                                elif line[j+4][0] == 'CONDITION':
-                                    condition(line, j+4, inst_line, i, token)
-
-                                elif line[j+4][0] == 'REPEAT':
-                                    repeat(line, j+4, inst_line, i, token)
-                        
-                        else:
-                            print("ERROR at line[{}]: Wrong range. number of times must be over 0".format(i+1))
-                            sys.exit()
-
-                    else:
-                        print("ERROR at line[{}]: Wrong name. Variable has to be made first".format(i+1))
-                        sys.exit()
-                
-                else:
-                    print("ERROR at line[{}]: Wrong type. 'INT' or 'COLON' type expected".format(i+1))
-                    sys.exit()
-
 
             else:
                 print("ERROR at line[{}]: Wrong type. 'INT' or 'USEVAR' type expected".format(i+1))
@@ -287,7 +249,7 @@ def repeat(line, j, inst_line, i, token):
         print("ERROR at line[{}]: Wrong syntax. ';' expected".format(i+1))
         sys.exit()
 
-def condition(line, j, inst_line, i, token):
+def condition(line, j, inst_line, i, token):            #조건문
     if line[j+1][0] == 'SEMICOLON':
         if line[j+3][0] == 'COLON':
             if line[j+2][0] == 'INT':
@@ -313,55 +275,30 @@ def condition(line, j, inst_line, i, token):
                     pass
 
             elif line[j+2][0] == 'USEVAR':
-                if line[j+3][0] == 'INT':
-                    if (line[j+2][1].count("'")) in Vars.keys():
-                        if int(Vars[line[j+2][1].count("'")]) == 0:
-                            if line[j+4][0] == 'MAKEVAR':
-                                makevar(line, j+4, token, i, inst_line)
+                if (line[j+2][1].count("'")) in Vars.keys():
+                    if (int(Vars[line[j+2][1].count("'")])  + line[j+2][1].count('.') - line[j+2][1].count(',')) == 0:
+                        if line[j+4][0] == 'MAKEVAR':
+                            makevar(line, j+4, token, i, inst_line)
 
-                            elif line[j+4][0] == 'INPUT':
-                                monoinput(line, j+4, i, inst_line)
+                        elif line[j+4][0] == 'INPUT':
+                            monoinput(line, j+4, i, inst_line)
 
-                            elif line[j+4][0] == 'INTPRINT':
-                                intprint(line, j+4, i)
+                        elif line[j+4][0] == 'INTPRINT':
+                            intprint(line, j+4, i)
 
-                            elif line[j+4][0] == 'STRPRINT':
-                                strprint(line, j+4, i)
+                        elif line[j+4][0] == 'STRPRINT':
+                            strprint(line, j+4, i)
 
-                            elif line[j+4][0] == 'REPEAT':
-                                repeat(line, j+4, inst_line, i, token)
-                            elif line[j+4][0] == 'CONDITION':
-                                condition(line, j+4, inst_line, i, token)
-                        else:
-                            pass
+                        elif line[j+4][0] == 'REPEAT':
+                            repeat(line, j+4, inst_line, i, token)
+                        elif line[j+4][0] == 'CONDITION':
+                            condition(line, j+4, inst_line, i, token)
                     else:
-                        print("ERROR at line[{}]: Wrong name. Variable has to be made first".format(i+1))
-                        sys.exit()
+                        pass
+                else:
+                    print("ERROR at line[{}]: Wrong name. Variable has to be made first".format(i+1))
+                    sys.exit()
 
-                elif line[j+3][0] == 'COLON':
-                    if (line[j+2][1].count("'")) in Vars.keys():
-                        if int(Vars[line[j+2][1].count("'")]) == 0:
-                            if line[j+4][0] == 'MAKEVAR':
-                                makevar(line, j+4, token, i, inst_line)
-
-                            elif line[j+4][0] == 'INPUT':
-                                monoinput(line, j+4, i, inst_line)
-
-                            elif line[j+4][0] == 'INTPRINT':
-                                intprint(line, j+4, i)
-
-                            elif line[j+4][0] == 'STRPRINT':
-                                strprint(line, j+4, i)
-
-                            elif line[j+4][0] == 'REPEAT':
-                                repeat(line, j+4, inst_line, i, token)
-                            elif line[j+4][0] == 'CONDITION':
-                                condition(line, j+4, inst_line, i, token)
-                        else:
-                            pass
-                    else:
-                        print("ERROR at line[{}]: Wrong name. Variable has to be made first".format(i+1))
-                        sys.exit()
 
             else:
                 print("ERROR at line[{}]: Wrong type. 'INT' or 'USEVAR' type expected".format(i+1))
@@ -375,7 +312,7 @@ def condition(line, j, inst_line, i, token):
         print("ERROR at line[{}]: Wrong syntax. ';' expected".format(i+1))
         sys.exit()
 
-def makevar(line, j, token, i, inst_line):
+def makevar(line, j, token, i, inst_line):              #변수생성
     if line[j+1][0] == 'COLON':
         if line[j+2][0] == 'INT':
             if line[j+3][0] == 'LINEEND':
@@ -420,7 +357,7 @@ def makevar(line, j, token, i, inst_line):
         print("ERROR at line[{}]: Wrong syntax. ':' expected".format(i+1))
         sys.exit()
 
-def monoinput(line, j, i, inst_line):
+def monoinput(line, j, i, inst_line):                   #입력
     if line[j+1][0] == 'SEMICOLON':
         if line[j+2][0] == 'MAKEVAR':
             inst_line += 'Vars['
@@ -441,16 +378,19 @@ def monoinput(line, j, i, inst_line):
         print("ERROR at line[{}]: Wrong syntax. ';' expected".format(i+1))
         sys.exit()
 
-def intprint(line, j, i):
+def intprint(line, j, i):                               #정수출력
     if line[j+1][0] == 'SEMICOLON':
         if line[j+2][0] == 'INT':
             print(line[j+2][1].count('.') - line[j+2][1].count(','))
 
-        elif line[j+2][0] == 'USEVAR':                              #Make Name error
+        elif line[j+2][0] == 'USEVAR':
             if (line[j+2][1].count("'")) in Vars.keys():
-                print(Vars[line[j+2][1].count("'")])
+                print(Vars[line[j+2][1].count("'")]+line[j+2][1].count('.')-line[j+2][1].count(','))
+
             else:
                 print("ERROR at line[{}]: Wrong name. Variable has to be made first".format(i+1))
+                sys.exit()
+
 
         else:
             print("ERROR at line[{}]: Wrong type. 'INT' or 'USEVAR' type expected".format(i+1))
@@ -460,7 +400,7 @@ def intprint(line, j, i):
         print("ERROR at line[{}]: Wrong syntax. ';' expected".format(i+1))
         sys.exit()
 
-def strprint(line, j, i):
+def strprint(line, j, i):                               #문자열출력
     if line[j+1][0] == 'SEMICOLON':
         if line[j+2][0] == 'INT':
             if line[j+3][0] == 'MULTI':
@@ -486,14 +426,13 @@ def strprint(line, j, i):
                 sys.exit()
         
         elif line[j+2][0] == 'USEVAR':
-            if (line[j+2][1].count("'")) in Vars.keys():
-                if int(Vars[line[j+2][1].count("'")]) > 31:                             #Make Name error
-                    print(chr(int(Vars[line[j+2][1].count("'")])))
-                else:
-                    print("ERROR at line[{}]: Wrong number. Number must be over 31".format(i+1))
-                    sys.exit()
-            else:
-                print("ERROR at line[{}]: Wrong name. Variable has to be made first".format(i+1))
+                if (line[j+2][1].count("'")) in Vars.keys():
+                    if int(Vars[line[j+2][1].count("'")]) > 31:
+                        print(chr(int(Vars[line[j+2][1].count("'")]) + line[j+2][1].count('.') - line[j+2][0].count(',')))
+                    else:
+                        print("ERROR at line[{}]: Wrong number. Number must be over 31".format(i+1))
+                        sys.exit()
+
         
         elif line[j+2][0] == 'LINEEND':
             print("\n", end = '')
