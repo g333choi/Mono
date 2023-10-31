@@ -1,150 +1,10 @@
 import sys
-
-
-def lexer(contents):
-    lines = contents.split('\n')
-    nline = []
-
-    for line in lines:
-        chars = list(line)
-        temp_str = ""
-        tokens = []
-        for char in chars:                                      #입력 쪼개기
-            if char == ":" or char == ';':                      #구분자
-                tokens.append(temp_str)
-                tokens.append(char)
-                temp_str = ""
-
-            elif char == '"':                                   #문장 끝
-                tokens.append(temp_str)
-                tokens.append(char)
-                temp_str = ""
-
-            elif char == ' ':                                   #곱셈
-                tokens.append(temp_str)
-                tokens.append(char)
-                temp_str = ''
-
-            elif char == '.' or char == ',' or char == '·' or char == '`' or char == "'":
-                temp_str += char                                
-
-            else:                                               #다른 문자 있을 경우 에러
-                print("Error: Unknown syntax")
-                sys.exit()
-        
-        for i in tokens:
-            if '' in tokens:
-                tokens.remove('')                               #'' 있을 경우 제거
-
-        items = []
-        for token in tokens:                                    #타입 판단
-            IsUsevar = True
-            IsMakevar = True
-            IsInt = True
-
-            if '`' in token:                                    #변수 생성 판단
-                for q in token:
-                    if q != '`':
-                        IsMakevar = False
-                if IsMakevar:
-                    items.append(("MAKEVAR", token))
-
-            elif "'" in token:
-                for o in token:
-                    if o != "'" and o != '.' and o != ',':
-                        IsUsevar = False
-                if IsUsevar:
-                    items.append(("USEVAR", token))                 #변수 생성
-
-            elif "." in token or ',' in token:                  #정수
-                for h in token:
-                    if h == '.' or h ==',':
-                        continue
-                    else:
-                        IsInt = False
-                if IsInt:
-                    items.append(("INT", token))
-
-            elif token == ' ':                                  #곱셈
-                items.append(("MULTI", token))
-
-            elif token == "·":                         #입력
-                items.append(("INPUT", token))
-
-            elif token == '··':                         #정수 출력
-                items.append(("INTPRINT", token))
-
-            elif token == '···':                         #문자열 출력
-                items.append(("STRPRINT", token))
-
-            elif token == '····':                         #조건문
-                items.append(("CONDITION", token))
-
-            elif token == '·····':                         #반복문
-                items.append(("REPEAT", token))
-
-            elif token == ':':                                  #콜론 구분
-                items.append(("COLON", token))
-
-            elif token == ';':                                  #세미콜론 구분
-                items.append(("SEMICOLON", token))
-
-            elif token == '"':                                  #문장 끝
-                items.append(("LINEEND", token))
-
-            else:
-                print("ERROR: Unknown syntax")
-                sys.exit()
-
-        nline.append(items)
-    return(nline)
+from Error import *
+from processing import *
 
 Vars = {                                                        #변수 저장 공간
 
 }
-
-def parse(file):
-    contents = open(file, 'r', encoding='UTF-8').read()
-    lines = lexer(contents)
-
-    for i in range(len(lines)):
-        line = lines[i]
-        inst_line = ''
-        InCondition = False
-        InRepeat = False
-
-        if line[-1][0] == 'LINEEND':
-            for j in range(len(line)):
-                token = line[j]
-                
-                if token[0] == 'MAKEVAR' and line[j+1][0] != 'LINEEND' and InCondition == False and InRepeat == False:
-                    makevar(line, j, token, i, inst_line)
-
-                elif token[0] == 'INPUT' and InCondition == False and InRepeat == False:
-                    monoinput(line, j, i, inst_line)
-                
-                elif token[0] == 'INTPRINT' and InCondition == False and InRepeat == False:
-                    intprint(line, j, i)
-
-                elif token[0] == 'STRPRINT' and InCondition == False and InRepeat == False:
-                    strprint(line, j, i)
-                
-                elif token[0] == 'CONDITION' and InCondition == False and InRepeat == False:
-                    InCondition = True
-                    condition(line, j, inst_line, i, token)
-
-                elif token[0] == 'REPEAT' and InCondition == False and InRepeat == False:
-                    InRepeat = True
-                    repeat(line, j, inst_line, i, token)
-
-                elif line[0][0] == 'LINEEND' or line[0][0] == 'COLON' or line[0][0] == 'SEMICOLON' or line[0][0] == 'MULTI':
-                    print("ERROR at line[{}]: Wrong type. 'INPUT', 'MAKEVAR', 'INTPRINT', 'STRPRINT', 'CONDITION' or 'REPEAT' type expected.".format(i+1))
-                    sys.exit()
-
-
-        else:
-            print("ERROR at line[{}]: '\"' expected at the end".format(i+1))
-            sys.exit()
 
 def repeat(line, j, inst_line, i, token):               #반복문
     if line [j+1][0] == 'SEMICOLON':
@@ -173,8 +33,7 @@ def repeat(line, j, inst_line, i, token):               #반복문
                                 repeat(line, j+4, inst_line, i, token)
 
                     else:
-                        print("ERROR at line[{}]: Wrong range. number of times must be over 0".format(i+1))
-                        sys.exit()
+                        rangeerror(i)
                 
                 elif line[j+3][0] == 'COLON':
                     if line[j+2][1].count('.')-line[j+2][1].count(',') > 0:
@@ -199,12 +58,10 @@ def repeat(line, j, inst_line, i, token):               #반복문
                                 repeat(line, j+4, inst_line, i, token)
                     
                     else:
-                        print("ERROR at line[{}]: Wrong range. number of times must be over 0".format(i+1))
-                        sys.exit()
+                        rangeerror(i)
 
                 else:
-                    print("ERROR at line[{}]: Wrong type. 'MULTI' or 'COLON' type expected".format(i+1))
-                    sys.exit()
+                    typeerror(i, ('MULTI', 'COLON'))
 
             
 
@@ -232,22 +89,17 @@ def repeat(line, j, inst_line, i, token):               #반복문
                                     repeat(line, j+4, inst_line, i, token)
                         
                         else:
-                            print("ERROR at line[{}]: Wrong range. number of times must be over 0".format(i+1))
-                            sys.exit()
+                            rangeerror(i)
 
                     else:
-                        print("ERROR at line[{}]: Wrong name. Variable has to be made first".format(i+1))
-                        sys.exit()
+                        name(i)
 
             else:
-                print("ERROR at line[{}]: Wrong type. 'INT' or 'USEVAR' type expected".format(i+1))
-                sys.exit()
+                typeerror(i, ('INT', 'USEVAR'))
         else:
-            print("ERROR at line[{}]: Wrong syntax. ':' expected".format(i+1))
-            sys.exit()
+            syntax(i, ':')
     else:
-        print("ERROR at line[{}]: Wrong syntax. ';' expected".format(i+1))
-        sys.exit()
+        syntax(i, ';')
 
 def condition(line, j, inst_line, i, token):            #조건문
     if line[j+1][0] == 'SEMICOLON':
@@ -296,21 +148,17 @@ def condition(line, j, inst_line, i, token):            #조건문
                     else:
                         pass
                 else:
-                    print("ERROR at line[{}]: Wrong name. Variable has to be made first".format(i+1))
-                    sys.exit()
+                    name(i)
 
 
             else:
-                print("ERROR at line[{}]: Wrong type. 'INT' or 'USEVAR' type expected".format(i+1))
-                sys.exit()
+                typeerror(i, ('INT', 'USEVAR'))
                 
         else:
-            print("ERROR at line[{}]: Wrong syntax. ':' expected".format(i+1))
-            sys.exit()
+            syntax(i, ':')
 
     else:
-        print("ERROR at line[{}]: Wrong syntax. ';' expected".format(i+1))
-        sys.exit()
+        syntax(i, ';')
 
 def makevar(line, j, token, i, inst_line):              #변수생성
     if line[j+1][0] == 'COLON':
@@ -324,8 +172,7 @@ def makevar(line, j, token, i, inst_line):              #변수생성
                     exec(inst_line)
 
                 else:
-                    print("ERROR at line[{}]: Wrong type. 'INT' type expected".format(i+1))
-                    sys.exit()
+                    typeerror(i, 'INT')
 
             elif line[j+3][0] == 'MULTI':
                 if line[j+2][0] == 'INT' and line[j+4][0] == 'INT':
@@ -336,12 +183,10 @@ def makevar(line, j, token, i, inst_line):              #변수생성
                     exec(inst_line)
 
                 else:
-                    print("ERROR at line[{}]: Wrong type. 'INT' type expected".format(i+1))
-                    sys.exit()
+                    typeerror(i, 'INT')
 
             else:
-                print("ERROR at line[{}]: Wrong type. 'MULTI' or 'LINEEND' type expected", format(i+1))
-                sys.exit()
+                typeerror(i, ('MULTI', 'LINEEND'))
 
         elif line[j+2][0] == 'LINEEND':
             inst_line += 'Vars['
@@ -350,12 +195,10 @@ def makevar(line, j, token, i, inst_line):              #변수생성
             exec(inst_line)
 
         else:
-            print("ERROR at line[{}]: Wrong type. 'INT' or 'LINEEND' type expected", format(i+1))
-            sys.exit()
+            typeerror(i, ('INT', 'LINEEND'))
 
     else:
-        print("ERROR at line[{}]: Wrong syntax. ':' expected".format(i+1))
-        sys.exit()
+        syntax(i, ':')
 
 def monoinput(line, j, i, inst_line):                   #입력
     if line[j+1][0] == 'SEMICOLON':
@@ -367,16 +210,13 @@ def monoinput(line, j, i, inst_line):                   #입력
             if a.isdigit():
                 inst_line += a
             else:
-                print("ERROR at line[{}]: Wrong type. 'INT' type needs to be entered".format(i+1))
-                sys.exit()
+                typeerror(i, 'INT')
             exec(inst_line)
         
         else:
-            print("ERROR at line[{}]: Wrong type. 'USEVAR type expected".format(i+1))
-            sys.exit()   
+            typeerror(i, 'USEVAR') 
     else:
-        print("ERROR at line[{}]: Wrong syntax. ';' expected".format(i+1))
-        sys.exit()
+        syntax(i, ';')
 
 def intprint(line, j, i):                               #정수출력
     if line[j+1][0] == 'SEMICOLON':
@@ -388,17 +228,14 @@ def intprint(line, j, i):                               #정수출력
                 print(Vars[line[j+2][1].count("'")]+line[j+2][1].count('.')-line[j+2][1].count(','))
 
             else:
-                print("ERROR at line[{}]: Wrong name. Variable has to be made first".format(i+1))
-                sys.exit()
+                name(i)
 
 
         else:
-            print("ERROR at line[{}]: Wrong type. 'INT' or 'USEVAR' type expected".format(i+1))
-            sys.exit()
+            typeerror(i, ('INT', 'USEVAR'))
                     
     else:
-        print("ERROR at line[{}]: Wrong syntax. ';' expected".format(i+1))
-        sys.exit()
+        syntax(i, ';')
 
 def strprint(line, j, i):                               #문자열출력
     if line[j+1][0] == 'SEMICOLON':
@@ -408,35 +245,29 @@ def strprint(line, j, i):                               #문자열출력
                     if (line[j+2][1].count('.') - line[j+2][1].count(',')) * (line[j+4][1].count('.') - line[j+4][1].count(',')) > 31:
                         print(chr((line[j+2][1].count('.') - line[j+2][1].count(',')) * (line[j+4][1].count('.') - line[j+4][1].count(','))))
                     else:
-                        print("ERROR at line[{}]: Wrong number. Number must be over 31".format(i+1))
-                        sys.exit()
+                        numerror(i)
                 else:
-                    print("ERROR at line[{}]: Wrong type. 'INT' type expected".format(i+1))
-                    sys.exit()
+                    typeerror(i, 'INT')
             
             elif line[j+3][0] == 'LINEEND':
                 if (line[j+2][1].count('.') - line[j+2][1].count(',')) > 31:
                     print(chr(line[j+2][1].count('.') - line[j+2][1].count(',')))
                 else:
-                    print("ERROR at line[{}]: Wrong number. Number must be over 31".format(i+1))
-                    sys.exit()
+                    numerror(i)
             
             else:
-                print("ERROR at line[{}]: Wrong type. 'INT' or 'LINEEND' type expected".format(i+1))
-                sys.exit()
+                typeerror(i, ('INT', 'LINEEND'))
         
         elif line[j+2][0] == 'USEVAR':
                 if (line[j+2][1].count("'")) in Vars.keys():
                     if int(Vars[line[j+2][1].count("'")]) > 31:
                         print(chr(int(Vars[line[j+2][1].count("'")]) + line[j+2][1].count('.') - line[j+2][0].count(',')))
                     else:
-                        print("ERROR at line[{}]: Wrong number. Number must be over 31".format(i+1))
-                        sys.exit()
+                        numerror(i)
 
         
         elif line[j+2][0] == 'LINEEND':
             print("\n", end = '')
 
     else:
-        print("ERROR at line[{}]: Wrong syntax. ';' expected".format(i+1))
-        sys.exit()
+        syntax(i, ';')
